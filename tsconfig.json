@@ -5,6 +5,7 @@
         "projectSearchDir": "src",
     },
     "compilerOptions": {
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "target": "ES6"
     }
 }

@@ -2,6 +2,8 @@ export const f = (a: string): number => {
   return a.length;
 };
 export function 是否是字符串(a: string) {
+  if (a==="") return true;
+
   const 第一位 = a[0];
   const 最后一位 = a[a.length - 1];
   if (a.length >= 2 && 第一位 === '"' && 最后一位 === '"') {
@@ -90,6 +92,7 @@ export function 解析JSON(a: string) {
 export function 解析字符串(a: string) {
   // console.log("2");
   let result = "";
+  if (a==="") return result;
   for (let i = 1; i < a.length - 1; i++) {
     result += a[i];
   }
@@ -131,13 +134,26 @@ export function 解析对象(a: string) {
         let x = i;
         let value;
         // const value = 解析数字(a.slice(i,a.length-1));
-        while (i <= a.length - 1) {
+        // && a[i]!==`}`遇到包含对象就会跳出了
+        while (i < a.length) {
+          if (a[i] === `[`) {
+            console.log("进去");
+            while (a[i] !== `]`) {
+              if (是否是数组(a.slice(x, i))) {
+                解析数组(a.slice(x, i));
+              }
+              i++;
+            }
+          }
           value = 解析JSON(a.slice(x, i));
           console.log("va1", value);
-          i++;
-          if (a[i - 1] === `,`) {
+          //按照键值对，逗号分开，跳出拿value的值，再到下一个键值
+          //但是遇到了对象里包裹数组的话，遇到逗号就跳出了
+          if (a[i] === `,`) {
+            i++;
             break;
           }
+          i++;
         }
         t = i;
         result[key] = value;
