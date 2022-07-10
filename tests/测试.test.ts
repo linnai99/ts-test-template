@@ -113,92 +113,103 @@
 //   });
 // });
 
-import {令牌, 令牌类型, 分词} from '../src/分词'
+import { 令牌, 令牌类型, 分词 } from '../src/分词'
 
 test('分词1', () => {
-    expect(分词("123, 234")).toStrictEqual([{
-        type: 令牌类型.数字,
-        content: '123'
-    },{
-        type: 令牌类型.逗号,
-        content: ','
-    },{
-        type: 令牌类型.数字,
-        content: '234'
-    }])
-    // expect(分词(`"qwe"`)).toStrictEqual([{
-    //     type: 令牌类型.字符串,
-    //     content: 'qwe'
-    // }])
-    // expect(分词(`"qwe","asd","",2334`)).toStrictEqual([{
-    //     type: 令牌类型.字符串,
-    //     content: 'qwe'
-    // },{
-    //     type: 令牌类型.逗号,
-    //     content: ','
-    // },{
-    //     type: 令牌类型.字符串,
-    //     content: 'asd'
-    // },{
-    //     type: 令牌类型.逗号,
-    //     content: ','
-    // },{
-    //     type: 令牌类型.字符串,
-    //     content: ''
-    // },
-    // {
-    //     type: 令牌类型.逗号,
-    //     content: ','
-    // },
-    // {
-    //     type: 令牌类型.数字,
-    //     content: '2334'
-    // }])
+  expect(分词("123, 234")).toStrictEqual([{
+    type: 令牌类型.数字,
+    content: '123'
+  }, {
+    type: 令牌类型.逗号,
+    content: ','
+  }, {
+    type: 令牌类型.数字,
+    content: '234'
+  }])
+  expect(分词(`"qwe", 123`)).toStrictEqual([{
+    type: 令牌类型.字符串,
+    content: 'qwe'
+  }, {
+    type: 令牌类型.逗号,
+    content: ','
+  }, {
+    type: 令牌类型.数字,
+    content: '123'
+  }])
+  console.log(分词(`"qwe","asd","",2334`));
+  
+  expect(分词(`"qwe","asd","",2334`)).toStrictEqual([{
+    type: 令牌类型.字符串,
+    content: 'qwe'
+  }, {
+    type: 令牌类型.逗号,
+    content: ','
+  }, {
+    type: 令牌类型.字符串,
+    content: 'asd'
+  }, {
+    type: 令牌类型.逗号,
+    content: ','
+  }, {
+    type: 令牌类型.字符串,
+    content: ''
+  },
+  {
+    type: 令牌类型.逗号,
+    content: ','
+  },
+  {
+    type: 令牌类型.数字,
+    content: '2334'
+  }])
 })
-// test('分词2',()=>{
-//     expect(分词(`{1,2}`)).toStrictEqual([
-//         {
-//             type: 令牌类型.左大括号,
-//             content: `{`
-//         },{
-//             type: 令牌类型.数字,
-//             content: '1'
-//         },
-//         {
-//             type: 令牌类型.逗号,
-//             content: ','
-//         },
-//         {
-//             type: 令牌类型.数字,
-//             content: '2'
-//         },
-//         {
-//             type: 令牌类型.右大括号,
-//             content: `}`
-//         }
-//     ])
-// })
-// test('分词3', () => {
-//     expect(分词(`{"qwe":"123"}`)).toStrictEqual([
-//         {
-//         type: 令牌类型.左大括号,
-//         content: `{`
-//         },
-//         {
-//             type: 令牌类型.字符串,
-//             content: `qwe`
-//         },
-//         {
-//             type: 令牌类型.冒号,
-//             content: `:`
-//         },
-//         {
-//             type: 令牌类型.字符串,
-//             content: `123`
-//         },
-//         {
-//             type: 令牌类型.右大括号,
-//             content: `}`
-//         }
-//     ])
-// })
+test('分词2', () => {
+  expect(分词(`{1,2}`)).toStrictEqual([
+    {
+      type: 令牌类型.左大括号,
+      content: `{`
+    }, {
+      type: 令牌类型.数字,
+      content: '1'
+    },
+    {
+      type: 令牌类型.逗号,
+      content: ','
+    },
+    {
+      type: 令牌类型.数字,
+      content: '2'
+    },
+    {
+      type: 令牌类型.右大括号,
+      content: `}`
+    }
+  ])
+})
+test('分词3', () => {
+  expect(分词(`{"qwe":"123"}`)).toStrictEqual([
+    {
+      type: 令牌类型.左大括号,
+      content: `{`
+    },
+    {
+      type: 令牌类型.字符串,
+      content: `qwe`
+    },
+    {
+      type: 令牌类型.冒号,
+      content: `:`
+    },
+    {
+      type: 令牌类型.字符串,
+      content: `123`
+    },
+    {
+      type: 令牌类型.右大括号,
+      content: `}`
+    }
+  ])
+})
+test('错误分词', () => {
+  expect(() => 分词(`"""`)).toThrowError("字符串异常停止")
+})

@@ -20,9 +20,15 @@ export interface 令牌 {
 export interface 解析响应 {
   index_increment: number,
   result: string,
-  type: 令牌类型
+  type: 令牌类型,
+  error?: string,
 }
-
+export function 是否是数字(a: string) {
+  if (!"0123456789".includes(a)) {
+    return false;
+  }
+  return true;
+}
 export function 是否是字符串(a: string) {
   console.log("a", a);
   if (a === "") return true;
@@ -34,14 +40,27 @@ export function 是否是字符串(a: string) {
   }
   return false;
 }
-export function 解析字符串(a: string) {
-  // console.log("2");
-  let result = "";
-  if (a === "") return result;
-  for (let i = 1; i < a.length - 1; i++) {
-    result += a[i];
+export function 解析字符串(a: string): 解析响应 {
+  const res: 解析响应 = {
+    index_increment: 1,
+    result: ``,
+    type: 令牌类型.字符串
   }
-  return result;
+
+  for (const i of a.slice(1)) {
+    if (i !== `"`) {
+      res.result += i;
+      res.index_increment += 1
+    } else {
+      res.index_increment += 1
+      break
+    }
+  }
+  if(res.index_increment===1){
+    res.error = "字符串异常停止"
+  }
+
+  return res;
 }
 
 function 解析数字(s: string): 解析响应 {
@@ -51,8 +70,8 @@ function 解析数字(s: string): 解析响应 {
     type: 令牌类型.数字
   }
 
-  for (const i of s){
-    if ("0123456789".includes(i)) {
+  for (const i of s) {
+    if (是否是数字(i)) {
       res.result += i
       res.index_increment += 1
     } else {
@@ -66,18 +85,14 @@ function 解析数字(s: string): 解析响应 {
 export function 分词(a: string): Array<令牌> {
   const res: 令牌[] = [];
 
-  let flag = false;
-  let str = "";
-  let type;
-  let x = 0;
-  let t = "";
-  for (let i = 0; i < a.length; ) {
+  for (let i = 0; i < a.length;) {
     const char = a[i];
+    let r: 解析响应;
+
     if (" \t\n\r".includes(char)) {
-      continue;
-    }
-    if ("0123456789".includes(char)){
-      const r = 解析数字(a.slice(i))
+      i += 1
+    } else if (是否是数字(char)) {
+      r = 解析数字(a.slice(i))
       i += r.index_increment
       res.push({
         content: r.result,
@@ -101,53 +116,27 @@ export function 分词(a: string): Array<令牌> {
         type: 令牌类型.逗号,
       });
       i += 1
+    } else if (char === `:`) {
+      res.push({
+        content: char,
+        type: 令牌类型.冒号,
+      });
+      i += 1
+    } else if (char === `"`) {
+      r = 解析字符串(a.slice(i));
+      i += r.index_increment
+      res.push({
+        content: r.result,
+        type: r.type
+      })
+    } else {
+      console.log(a, i);
+      break
     }
 
-  //   x = i;
-  //   console.log("是否是字符串", a.slice(x, i + 1));
-  //   t += a.slice(x, i + 1);
-  //   console.log("t", t);
-  //   if (是否是字符串(t)) {
-  //     flag = true;
-  //     str = 解析字符串(t);
-  //     console.log("str", str);
-  //     type = "字符串";
-  //   }
-  //   console.log("str1", str);
-  //   if (char == ",") {
-  //     if (flag) {
-  //       res.push({
-  //         content: str,
-  //         type: type,
-  //       });
-  //       str = "";
-  //       t = "";
-  //       console.log("str2", str);
-  //       flag = false;
-  //       res.push({
-  //         content: ",",
-  //         type: 令牌类型.逗号,
-  //       });
-  //       console.log("str2", str);
-  //     }
-  //   }
-  // }
-  // res.push({
-  //   content: str,
-  //   type: type,
-  // });
-  // console.log("res", res);
+    if (r?.error) {
+      throw `error: ${r.error} 于位置 ${i}`
+    }
   }
   return res;
 }
-
-// {"qwe":"123", "中文": 123}
-// [`{`, `"qwe"`, `:`, `"123"`, `"中文"`, `:`, `123`, `}`]
-/*
-[
-    {conetent:`{`, type:左大括号},
-    {conetent:`qwe`, type:字符串},
-    {conetent:`:`, type:冒号},
-    ...
-
-*/
