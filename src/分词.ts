@@ -72,7 +72,7 @@ export function 是否是数字(a: string) {
   return true;
 }
 export function 是否是字符串(a: string) {
-  console.log("a", a);
+  // console.log("a", a);
   if (a === "") return true;
 
   const 第一位 = a[0];
@@ -120,7 +120,7 @@ function 解析数字(s: string): 解析令牌响应 {
 
   for (const i of s) {
     if (是否是数字(i)) {
-      console.log("i", i)
+      // console.log("i", i)
       res.result += i
       res.index_increment += 1
     } else {
@@ -195,7 +195,7 @@ export function 分词(a: string): Array<令牌> {
         type: r.type
       })
     } else {
-      console.log(a, i);
+      // console.log(a, i);
       break
     }
 
@@ -203,7 +203,7 @@ export function 分词(a: string): Array<令牌> {
       throw `error: ${r.error} 于位置 ${i}`
     }
   }
-  console.log("vi", res)
+  // console.log("vi", res)
   return res;
 }
 
@@ -223,28 +223,13 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
     if (curr_token.type === ']') {
       res.index_increment = i + 1
       break
-    }
 
-    if (curr_token.type === ",") {
+    } else if (curr_token.type === ",") {
       i++;
-    } else if (["数字", '字符串'].includes(curr_token.type)) {
-      // curr_token是对象,但是解析函数输入是一个带content,type的数组
-      // 于是加个[]
-
-      res.result.push(解析([curr_token]));
-      i++;
-    } else if (curr_token.type === "[") {
-      // 遇到嵌套数组,碰到[,就要把剩余数据的数组递归函数了,输入参数是带令牌的数组   
-      const current_array_res = 解析数组(arr.slice(i))
+    } else {
+      const current_array_res = 解析(arr.slice(i))
       res.result.push(current_array_res.result)
       i += current_array_res.index_increment
-    } else if (curr_token.type === '{') {
-      const current_array_res = 解析对象(arr.slice(i))
-      res.result.push(current_array_res.result)
-      i += current_array_res.index_increment
-    }
-    else {
-      i++;
     }
     // i的结果最后要返回给res的i的增量,这样主函数才能拿到i的增加数
     res.index_increment = i
@@ -257,12 +242,10 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
     index_increment: 1,
     result: {},
   }
-  let key;
-  let value;
+  let key, value;
   for (let i = 1; i < arr.length;) {
     if (arr[i].type === "}") {
       res.index_increment = i + 1;
-      // console.log("进", key, value, arr[i + 1])
       break;
     }
     if (key === undefined) {
@@ -271,29 +254,30 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
     } else if (arr[i].type === ":") {
       i++;
     } else if (value === undefined) {
-      const curr_res = 解析([arr[i]]);
-      res.result[key] = curr_res.result;
+      const curr_res = 解析(arr.slice(i));
+      value = res.result[key] = curr_res.result;      
       i += curr_res.index_increment;
     } else if (arr[i].type === ",") {
-      i++;
-      key = undefined;
-      value = undefined;
+      i++;      
+      key = value = undefined;
     } else {
+      console.log(arr[i]);
+      throw `什么也不是 ${arr[i]}`
       i++;
     }
     res.index_increment = i;
   }
   return res;
 }
-export function 解析(tokens: 令牌[]): 解析对象响应 {
+export function 解析(tokens: 令牌[], only_one=true): 解析对象响应 {
   const arr = tokens;
   const res: 解析对象响应 = {
     index_increment: 0,
     result: undefined
   }
   // let res: Object | Array<any> | string | number;
-  console.log('arr', arr);
-  for (let i = 0; i < arr.length; i++) {
+  // console.log('arr', arr);
+  for (let i = 0; i < arr.length; ) {
     if (arr[i].type === "[") {
       // console.log("arrz",解析数组(arr.slice(i)))
       const current_array_res = 解析数组(arr.slice(i))
@@ -303,7 +287,7 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
     } else if (arr[i].type === "{") {
       const current_array_res = 解析对象(arr.slice(i))
       res.result = current_array_res.result
-      console.log("res", res)
+      // console.log("res", res)
       i += current_array_res.index_increment
     }
     else if (arr[i].type === "字符串") {
@@ -313,15 +297,21 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
       res.result = Number(arr[i].content);
       i++;
       // console.log('t', res);
+    } else {
+      console.log(arr[i]);
+      throw `未知的类型 ${arr[i]}`
     }
-    
-    res.index_increment = i+1;
+
+    res.index_increment = i;
     // res.push(arr[i].content);
 
     // res+=arr[i].content;
     // res+=t;
     // console.log('res0', res);
+    if (only_one){
+      break
+    }
   }
-  console.log('res', res);
+  // console.log('res', res);
   return res;
 }

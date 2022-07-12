@@ -219,21 +219,18 @@ test('解析',()=>{
     [123, 23, [4], []],
     "asd",456,
     [], [[]], [[[[[[
-      {"asd":123,"zxc":{"zxcv":123}}
+      {"asd":123,"zxc":{"zxcv":123, "qwe": []}}
     ]]]]]]
   ]
-
   `
+  // const json = `
+  // [
+  //     {"asd":123,"zxc":{"zxcv":123}}
+  // ]
+  // `
   const tokens = 分词(json)
-  // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])
-  expect(解析(tokens).result).toStrictEqual([
-    "qwe",
-    [123, 23, [4], []],
-    "asd",456,
-    [], [[]], [[[[[[
-      {"asd":123,"zxc":{"zxcv":123}}
-    ]]]]]]
-  ])
+  // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])  
+  expect(解析(tokens, false).result).toStrictEqual(JSON.parse(json))
   // expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
   //   asd: "asdf",
   //   qwe: {qwer:"wqe"},
