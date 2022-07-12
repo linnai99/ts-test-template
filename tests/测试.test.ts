@@ -113,7 +113,7 @@
 //   });
 // });
 
-import { 令牌, 令牌类型, 分词 } from '../src/分词'
+import { 令牌, 令牌类型, 分词,解析 } from '../src/分词'
 
 test('分词1', () => {
   expect(分词("123, 234")).toStrictEqual([{
@@ -136,7 +136,7 @@ test('分词1', () => {
     type: 令牌类型.数字,
     content: '123'
   }])
-  console.log(分词(`"qwe","asd","",2334`));
+  // console.log(分词(`"qwe","asd","",2334`));
   
   expect(分词(`"qwe","asd","",2334`)).toStrictEqual([{
     type: 令牌类型.字符串,
@@ -164,10 +164,10 @@ test('分词1', () => {
   }])
 })
 test('分词2', () => {
-  expect(分词(`{1,2}`)).toStrictEqual([
+  expect(分词(`[1,2]`)).toStrictEqual([
     {
-      type: 令牌类型.左大括号,
-      content: `{`
+      type: 令牌类型.左中括号,
+      content: `[`
     }, {
       type: 令牌类型.数字,
       content: '1'
@@ -181,8 +181,8 @@ test('分词2', () => {
       content: '2'
     },
     {
-      type: 令牌类型.右大括号,
-      content: `}`
+      type: 令牌类型.右中括号,
+      content: `]`
     }
   ])
 })
@@ -210,6 +210,28 @@ test('分词3', () => {
     }
   ])
 })
+test('解析',()=>{
+  // expect(解析(`"qwe"`)).toStrictEqual("qwe"),
+  // expect(解析(`1234`)).toStrictEqual(1234),
+  const json = `
+  [
+    "qwe",
+    [123, 23, [4], []],
+    "asd",456,
+    [], [[]], [[[[[[]]]]]]
+  ]
+
+  `
+  const tokens = 分词(json)
+  // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])
+  expect(解析(tokens)).toStrictEqual(JSON.parse(json))
+  // expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
+  //   asd: "asdf",
+  //   qwe: {qwer:"wqe"},
+   
+  // });
+
+}) 
 test('错误分词', () => {
   expect(() => 分词(`"""`)).toThrowError("字符串异常停止")
 })
