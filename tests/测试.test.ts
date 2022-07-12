@@ -218,13 +218,22 @@ test('解析',()=>{
     "qwe",
     [123, 23, [4], []],
     "asd",456,
-    [], [[]], [[[[[[]]]]]]
+    [], [[]], [[[[[[
+      {"asd":123,"zxc":{"zxcv":123}}
+    ]]]]]]
   ]
 
   `
   const tokens = 分词(json)
   // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])
-  expect(解析(tokens)).toStrictEqual(JSON.parse(json))
+  expect(解析(tokens).result).toStrictEqual([
+    "qwe",
+    [123, 23, [4], []],
+    "asd",456,
+    [], [[]], [[[[[[
+      {"asd":123,"zxc":{"zxcv":123}}
+    ]]]]]]
+  ])
   // expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
   //   asd: "asdf",
   //   qwe: {qwer:"wqe"},
@@ -234,4 +243,5 @@ test('解析',()=>{
 }) 
 test('错误分词', () => {
   expect(() => 分词(`"""`)).toThrowError("字符串异常停止")
+  // expect(() => 解析(分词(`{{}`))).toThrowError("字符串异常停止")
 })
