@@ -113,7 +113,7 @@
 //   });
 // });
 
-import { 令牌, 令牌类型, 分词,解析 } from '../src/分词'
+import { 令牌, 令牌类型, 分词,解析,通用解析 } from '../src/分词'
 
 test('分词1', () => {
   expect(分词("123, 234")).toStrictEqual([{
@@ -220,7 +220,8 @@ test('解析',()=>{
     "asd",456,
     [], [[]], [[[[[[
       {"asd":123,"zxc":{"zxcv":123, "qwe": []}}
-    ]]]]]]
+    ]]]]]],
+    123,"asf"
   ]
   `
   // const json = `
@@ -230,7 +231,7 @@ test('解析',()=>{
   // `
   const tokens = 分词(json)
   // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])  
-  expect(解析(tokens, false).result).toStrictEqual(JSON.parse(json))
+  expect(解析(tokens).result).toStrictEqual(JSON.parse(json))
   // expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
   //   asd: "asdf",
   //   qwe: {qwer:"wqe"},

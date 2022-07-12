@@ -223,11 +223,10 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
     if (curr_token.type === ']') {
       res.index_increment = i + 1
       break
-
     } else if (curr_token.type === ",") {
       i++;
     } else {
-      const current_array_res = 解析(arr.slice(i))
+      const current_array_res = 通用解析(arr.slice(i))
       res.result.push(current_array_res.result)
       i += current_array_res.index_increment
     }
@@ -249,16 +248,16 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
       break;
     }
     if (key === undefined) {
-      key = 解析([arr[i]]).result;
+      key = 通用解析([arr[i]]).result;
       i++;
     } else if (arr[i].type === ":") {
       i++;
     } else if (value === undefined) {
-      const curr_res = 解析(arr.slice(i));
-      value = res.result[key] = curr_res.result;      
+      const curr_res = 通用解析(arr.slice(i));
+      value = res.result[key] = curr_res.result;
       i += curr_res.index_increment;
     } else if (arr[i].type === ",") {
-      i++;      
+      i++;
       key = value = undefined;
     } else {
       console.log(arr[i]);
@@ -269,49 +268,49 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
   }
   return res;
 }
-export function 解析(tokens: 令牌[], only_one=true): 解析对象响应 {
+export function 通用解析(tokens: 令牌[]): 解析对象响应 {
   const arr = tokens;
   const res: 解析对象响应 = {
     index_increment: 0,
     result: undefined
   }
-  // let res: Object | Array<any> | string | number;
-  // console.log('arr', arr);
-  for (let i = 0; i < arr.length; ) {
-    if (arr[i].type === "[") {
-      // console.log("arrz",解析数组(arr.slice(i)))
-      const current_array_res = 解析数组(arr.slice(i))
-      res.result = current_array_res.result
-      // console.log("i",i)
-      i += current_array_res.index_increment
-    } else if (arr[i].type === "{") {
-      const current_array_res = 解析对象(arr.slice(i))
-      res.result = current_array_res.result
-      // console.log("res", res)
-      i += current_array_res.index_increment
-    }
-    else if (arr[i].type === "字符串") {
-      res.result = arr[i].content;
-      i++;
-    } else if (arr[i].type === "数字") {
-      res.result = Number(arr[i].content);
-      i++;
-      // console.log('t', res);
-    } else {
-      console.log(arr[i]);
-      throw `未知的类型 ${arr[i]}`
-    }
+  const curr_token = arr[res.index_increment]
 
-    res.index_increment = i;
-    // res.push(arr[i].content);
-
-    // res+=arr[i].content;
-    // res+=t;
-    // console.log('res0', res);
-    if (only_one){
-      break
-    }
+  if (curr_token.type === "[") {
+    // console.log("arrz",解析数组(arr.slice(i)))
+    const current_array_res = 解析数组(arr)
+    res.result = current_array_res.result
+    // console.log("i",i)
+    res.index_increment = current_array_res.index_increment
+  } else if (curr_token.type === "{") {
+    const current_array_res = 解析对象(arr)
+    res.result = current_array_res.result
+    // console.log("res", res)
+    res.index_increment = current_array_res.index_increment
   }
-  // console.log('res', res);
+  else if (curr_token.type === "字符串") {
+    res.result = curr_token.content;
+    res.index_increment = 1
+  } else if (curr_token.type === "数字") {
+    res.result = Number(curr_token.content);
+    res.index_increment = 1
+  } else {
+    console.log(curr_token);
+    throw `未知的类型 ${curr_token}`
+  }
+
   return res;
+}
+
+export function 解析(tokens: 令牌[]): 解析对象响应 {
+  const res: 解析对象响应 = {
+    index_increment: 0,
+    result: undefined
+  }
+  while (res.index_increment < tokens.length) {
+    const curr_res = 通用解析(tokens)
+    res.index_increment += curr_res.index_increment
+    res.result = curr_res.result
+  }
+  return res
 }
