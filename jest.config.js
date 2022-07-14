@@ -5,5 +5,6 @@ module.exports = {
   transform: {
     "^.+\\.(t|j)sx?$": ["@swc/jest"],
   },
-
+  setupFilesAfterEnv: ["jest-27-expect-message"]
+  
 };

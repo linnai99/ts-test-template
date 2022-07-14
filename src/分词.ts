@@ -18,6 +18,7 @@ export enum 令牌类型 {
 export interface 令牌 {
   content: string;
   type: 令牌类型;
+  index: number
 }
 export const 是否是数字开头 = String.prototype.includes.bind(`-.0123456789`)
 
@@ -141,54 +142,62 @@ export function 分词(a: string): Array<令牌> {
     } else if (是否是数字开头(char)) {
       // console.log("char",char)
       r = 解析数字(a.slice(i))
-      i += r.index_increment
       res.push({
         content: r.result,
-        type: r.type
+        type: r.type,
+        index: i
       })
+      i += r.index_increment
     } else if (char === `{`) {
       res.push({
         content: char,
         type: 令牌类型.左大括号,
+        index: i
       });
       i += 1
     } else if (char === `}`) {
       res.push({
         content: char,
         type: 令牌类型.右大括号,
+        index: i
       });
       i += 1
     } else if (char === `[`) {
       res.push({
         content: char,
         type: 令牌类型.左中括号,
+        index: i
       });
       i += 1
     } else if (char === `]`) {
       res.push({
         content: char,
         type: 令牌类型.右中括号,
+        index: i
       });
       i += 1
     } else if (char === `,`) {
       res.push({
         content: char,
         type: 令牌类型.逗号,
+        index: i
       });
       i += 1
     } else if (char === `:`) {
       res.push({
         content: char,
         type: 令牌类型.冒号,
+        index: i
       });
       i += 1
     } else if (char === `"`) {
       r = 解析字符串(a.slice(i));
-      i += r.index_increment
       res.push({
         content: r.result,
-        type: r.type
+        type: r.type,
+        index: i
       })
+      i += r.index_increment
     } else {
       break
     }
@@ -225,11 +234,12 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
     }
     // i的结果最后要返回给res的i的增量,这样主函数才能拿到i的增加数
     res.index_increment = i
-  }
-  if (arr.length === 1) {
-    throw `这不是数组 ${arr}`
-  }
+    // console.log("res", res);
 
+  }
+  if (arr.length === 1 && arr[0].type === '[') {
+    throw `语法错误: 预期外的字符 [`
+  }
   return res;
 }
 function 解析对象(arr: Array<令牌>): 解析对象响应 {
@@ -262,11 +272,14 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
       i++;
       key = value = undefined;
     } else {
-      console.log('什么也不是', arr[i]);
+      // console.log('什么也不是', arr[i]);
       throw `什么也不是 ${arr[i]}`
       i++;
     }
     res.index_increment = i;
+  }
+  if (arr.length === 1 && arr[0].type === '{') {
+    throw `语法错误: 预期外的字符 {`
   }
   return res;
 }
@@ -277,10 +290,9 @@ export function 通用解析(tokens: 令牌[]): 解析对象响应 {
     result: undefined
   }
   const curr_token = arr[res.index_increment]
-  console.log(curr_token);
+  // console.log(curr_token);
 
   if (curr_token.type === "[") {
-    // console.log("arrz",解析数组(arr))
     const current_array_res = 解析数组(arr)
     res.result = current_array_res.result
     // console.log("i",i)
@@ -291,7 +303,7 @@ export function 通用解析(tokens: 令牌[]): 解析对象响应 {
     res.result = current_array_res.result
     // console.log("res", res)
     res.index_increment = current_array_res.index_increment
-    console.log("qqq1",res.index_increment);
+    // console.log("qqq1",res.index_increment);
   }
   else if (curr_token.type === "字符串") {
     res.result = curr_token.content;
@@ -300,12 +312,13 @@ export function 通用解析(tokens: 令牌[]): 解析对象响应 {
     res.result = Number(curr_token.content);
     res.index_increment = 1
   } else if (curr_token.type === '}') {
-    console.log("qqq2",res.index_increment);
-    throw `语法错误: 预期外的字符 ${curr_token.content} 在位置 ${res.index_increment}`
+    // console.log("qqq2",res.index_increment);
+    throw `语法错误: 预期外的字符 ${curr_token.content} 在位置 ${curr_token.index}`
   } else {
-    console.log('未知的类', curr_token);
+    // console.log('未知的类', curr_token);
     throw `未知的类型 ${curr_token}`
   }
+  // console.log("qqq3",res);
   return res;
 }
 
@@ -320,6 +333,6 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
     res.index_increment += curr_res.index_increment
     res.result = curr_res.result
   }
-  console.log(res, res.index_increment, tokens.length);
+  // console.log(res, res.index_increment, tokens.length);
   return res.result
 }
