@@ -172,9 +172,12 @@ export function 解析整数(a: string): string {
 
   const 正整数解析结果 = 解析正整数(to_parsed);
   if (正整数解析结果 === "") {
-    throw `不正确的数字`
+    throw `不正确的数字${a}`
   } else {
     res += 正整数解析结果;
+  }
+  if (res.length === 1 && res[0] === "-") {
+    throw `只有一个负号`
   }
   return res;
 }
@@ -185,6 +188,9 @@ export function 解析普通数字(a: string): string {
     return prefix
   }
   const suffix = 解析正整数(a.slice(i + 1));
+  if (suffix === "") {
+    return prefix
+  }
   return prefix + '.' + suffix
 }
 export function 解析科学计数法(a: string): string {
@@ -321,7 +327,7 @@ export function 分词(a: string): Array<令牌> {
       throw `error: ${r.error} 于位置 ${i}`
     }
   }
-  console.log("vi", res)
+  // console.log("vi", res)
   return res;
 }
 
@@ -355,8 +361,6 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
     const current_array_res = 通用解析(arr.slice(i))
     res.result.push(current_array_res.result)
     // console.log("12",res.result);
-
-
     i += current_array_res.index_increment
     flag = false;
     // i的结果最后要返回给res的i的增量,这样主函数才能拿到i的增加数
@@ -486,6 +490,6 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
     res.result = curr_res.result
   }
   depth_limiter.clear()
-  console.log(res, res.index_increment, tokens.length);
+  // console.log(res, res.index_increment, tokens.length);
   return res.result;
 }
