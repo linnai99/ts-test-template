@@ -113,7 +113,7 @@
 //   });
 // });
 
-import { 令牌, 令牌类型, 分词, 解析, 通用解析 } from '../src/分词'
+import { 令牌, 令牌类型, 分词, 解析, 通用解析,解析整数,解析普通数字,解析科学计数法 } from '../src/分词'
 // const fs = require('fs')
 // const path = require('path')
 
@@ -229,29 +229,30 @@ import * as fs from 'fs'
 //     }
 //   ])
 // })
+test('读数字token', () => {
+  expect(() => 解析整数("")).toThrowError("不正确的数字")
+  expect(解析整数('123')).toStrictEqual('123')
+  expect(解析整数('-123')).toStrictEqual('-123')
+  expect(解析整数('-123.123')).toStrictEqual('-123')
+  expect(解析整数('123.123')).toStrictEqual('123')
+  expect(解析普通数字('123.123')).toStrictEqual('123.123')
+  expect(解析普通数字('0.123')).toStrictEqual('0.123')
+  expect(解析普通数字('0.123')).toStrictEqual('0.123')
+  expect(解析普通数字('0|123')).toStrictEqual('0')
+  expect(解析普通数字('1236789')).toStrictEqual('1236789')
+  expect(()=>解析普通数字('01')).toThrowError('长整数不能以0开头')
+  expect(解析普通数字('1236789')).toStrictEqual('1236789')
+  expect(()=>解析普通数字('01')).toThrowError('长整数不能以0开头')
+  expect(解析科学计数法('13e1')).toStrictEqual('13e1')
+  expect(()=>解析科学计数法('12e')).toThrowError()
+  expect(解析科学计数法('-13e1')).toStrictEqual('-13e1')
+})
 test('解析', () => {
-  // const q = `["x"` `[1,`   [1,] 
-  // `[1,
-  //   1
-  //   ,1`
-  // [""
-  // `[{}`   {"asd":"asd"
-  // `[-1.0.]` `[-1.0.1]`
-  // `[1.8011670033376514H-308]`
-  // `[.123]`
-  // `[012]`
-  // `{"x"::"b"}`
-  // `{"�":"0",}`
-  // `{"a" b}` 分词为{ a了
-  // `{"a":`   {"a"  {"a
-  //     `{ "foo" : "bar", "a" }`  {"a":"b"}#
-  // *
-  const q =`{"asd":2` 
+  const q =`[-1.0.1]`
   expect(() => 解析(分词(q))).toThrowError()
-  // expect(解析(分词(q))).toStrictEqual(JSON.parse(q))
-  // expect(解析(分词(`null`))).toStrictEqual(null)
-  // expect(解析(分词(`false`))).toStrictEqual(false)
-  // expect(解析(分词(`true`))).toStrictEqual(true)
+  expect(解析(分词(`123`))).toStrictEqual(JSON.parse(`123`))
+  expect(解析(分词(`false`))).toStrictEqual(false)
+  expect(解析(分词(`true`))).toStrictEqual(true)
   const json =
   `
   [
@@ -264,18 +265,16 @@ test('解析', () => {
     12e3,"asf"
   ]
   `
-  // const tokens = 分词(json)
-  // expect(解析(tokens)).toStrictEqual(JSON.parse(json))
-  // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])  
+  const tokens = 分词(json)
+  expect(解析(tokens)).toStrictEqual(JSON.parse(json))
+  expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])  
 
-  // expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
-  //   asd: "asdf",
-  //   qwe: {qwer:"wqe"},
-
-  // });
-
+  expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
+    asd: "asdf",
+    qwe: {qwer:"wqe"},
+  });
 })
-test('解析数据', () => {
+test('从文件解析JSON', () => {
   const folderPath = 'JSONTestSuite/test_parsing'
   fs.readdirSync(folderPath).forEach(item => {
     // console.log(item);

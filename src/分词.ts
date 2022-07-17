@@ -141,87 +141,87 @@ export function 解析字符串(a: string): 解析令牌响应 {
   return res;
 }
 
+function 解析正整数(s: string): string {
+  let res = ''
+
+  for (const c of s) {
+    if ("0123456789".includes(c)) {
+      res += c
+    } else {
+      break
+    }
+  }
+  if (res.length && res[0] === "0") {
+    if (res.length === 1) {
+      return '0'
+    } else {
+      throw `长整数不能以0开头`
+    }
+  }
+  return res
+}
+
+export function 解析整数(a: string): string {
+  let res = ''
+  let to_parsed = a
+
+  if (to_parsed[0] === "-") {
+    to_parsed = to_parsed.slice(1)
+    res += '-'
+  }
+
+  const 正整数解析结果 = 解析正整数(to_parsed);
+  if (正整数解析结果 === "") {
+    throw `不正确的数字`
+  } else {
+    res += 正整数解析结果;
+  }
+  return res;
+}
+export function 解析普通数字(a: string): string {
+  const prefix = 解析整数(a);
+  let i = prefix.length;
+  if (a[i] !== `.`) {
+    return prefix
+  }
+  const suffix = 解析正整数(a.slice(i + 1));
+  return prefix + '.' + suffix
+}
+export function 解析科学计数法(a: string): string {
+  const prefix = 解析普通数字(a);
+  let i = prefix.length;
+  if (a.length == 0) {
+    return prefix
+  }
+  if (a[i] === undefined) {
+    return prefix
+  }
+  if (a[i].toLowerCase() !== `e`) {
+    return prefix
+  }
+  const suffix = 解析正整数(a.slice(i + 1));
+  if ((i + 1) === a.length) {
+    throw `e后面应有数字`
+  }
+
+  return prefix + 'e' + suffix
+}
 function 解析数字(a: string): 解析令牌响应 {
+  // 1 -1 1.1 -2.0 234 123 
+  // 1e2 1E2 20e3 -3e8 1.2e3
+  // 解析整数 1 -1 2 0
+  // 解析浮点数 := 解析整数 . 解析正整数
+  // 解析普通数字 := 解析整数 | 解析浮点数
+  // 解析科学计数法 := 解析普通数字 e|E 解析正整数
+  // 解析数字 := 解析普通数字 | 解析科学计数法
   const res: 解析令牌响应 = {
     index_increment: 0,
     result: "",
     type: 令牌类型.数字
   }
-  for (let i = 0; i < a.length;) {
-    if (a[0] === "0" && (a[1] === "}" || a[1] === "]")) {
-      res.result = "0";
-    }
-    if (a[i] === "0") {
-      i++;
-    } else if (a[i] >= "1" && a[i] <= "9") {
-      i++;
-      while (a[i] >= "0" && a[i] <= "9") {
-        i++;
-      }
-      // console.log("1");
-      res.result = a.slice(0, i);
-    } else if (a[i] === "-") {
-      i++;
-      if ((a[i] >= "0" && a[i] <= "9")) {
-        // console.log("err1",a[i]);
-      } else {
-        // console.log("err2");
-        // throw "不正确的数字"
-      }
-      while (a[i] >= "0" && a[i] <= "9") {
-        i++;
-      }
-      // console.log("2");
-      res.result = a.slice(0, i)
-      // console.log("err",a[i]);
-    } else if (a[i] === ".") {
-      i++;
-      if ((a[i] >= "0" && a[i] <= "9")) {
-        while (a[i] >= "0" && a[i] <= "9") {
-          i++;
-        }
-      } else {
-        // console.log("error");
-        throw "不正确的数字"
-      }
-
-      // console.log("3");
-      res.result = a.slice(0, i)
-    } else if (a[i] === "e" || a[i] === "E") {
-      i++;
-      if (a[i] === "-" || a[i] === "+") {
-        i++;
-      }
-      if ((a[i] >= "0" && a[i] <= "9")) {
-      }
-      while (a[i] >= "0" && a[i] <= "9") {
-        i++;
-      }
-      // console.log("4");
-      res.result = a.slice(0, i);
-    } else {
-      // console.log("sd",a[i]);
-      break
-      // if(a[i] === ","||a[i]=="]"||a[i]=="}"||a[i]=='"'||a[i]==''){
-      //   break;
-      // }
-      // throw `错误的数字`;
-
-    }
-    res.index_increment = i
-
-  }
-  // for (const i of a) {
-  //   if (是否是数字(i)) {
-  //     console.log("i", i)
-  //     res.result += i
-  //     res.index_increment += 1
-  //   } else {
-  //     break
-  //   }
-  // }
-  // console.log("res",res);
-
+  const temp = 解析科学计数法(a);
+  res.result = temp;
+  res.index_increment = temp.length;
   return res
 }
 export function 分词(a: string): Array<令牌> {
@@ -321,7 +321,7 @@ export function 分词(a: string): Array<令牌> {
       throw `error: ${r.error} 于位置 ${i}`
     }
   }
-  // console.log("vi", res)
+  console.log("vi", res)
   return res;
 }
 
