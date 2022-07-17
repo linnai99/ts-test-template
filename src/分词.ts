@@ -4,13 +4,15 @@ import { copyFileSync } from "fs";
 
 class DepthLimiter {
   public current_loop_depth: number = 0;
-  public readonly MAX_LOOP_DEPTH = 10000;
+  public readonly MAX_LOOP_DEPTH = 1000;
 
   public check_loop_depth() {
     if (this.current_loop_depth > this.MAX_LOOP_DEPTH) {
       throw `递归深度过大: ${this.current_loop_depth}`
     }
     this.current_loop_depth += 1
+    // console.log(this.current_loop_depth);
+    
   }
   public clear() {
     this.current_loop_depth = 0
@@ -416,23 +418,18 @@ export function 解析对象(arr: Array<令牌>): 解析对象响应 {
   }
   for (let i = 1; i < arr.length;) {
     const token = arr[i]
-
-    // console.log('arr[i]', token)
-
-    const pair = 解析pair(arr.slice(res.index_increment));
-    res.result[pair.result.key] = pair.result.value;
-    res.index_increment += pair.index_increment;
-    i = res.index_increment
     if (arr[i].type === `,`) {
       res.index_increment += 1;
       i += 1
     } else if (arr[i].type === `}`) {
       res.index_increment += 1;
       break
-    } else {
-      throw `语法错误: 未知的符号`
     }
 
+    const pair = 解析pair(arr.slice(res.index_increment));
+    res.result[pair.result.key] = pair.result.value;
+    res.index_increment += pair.index_increment;
+    i = res.index_increment
   }
   if (arr.length === 1 && arr[0].type === '{') {
     throw `语法错误: 预期外的字符 {`
@@ -505,13 +502,15 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
     throw `空的令牌数组`
   }
   // console.log(res.index_increment, tokens.length);
+  depth_limiter.clear()
+
   const curr_res = 通用解析(tokens.slice(res.index_increment))
   res.index_increment += curr_res.index_increment
   res.result = curr_res.result
-  if(res.index_increment!==tokens.length){
+  if (res.index_increment !== tokens.length) {
     throw `JSON应该只有一个主体`
   }
-  depth_limiter.clear()
+  
   // console.log(res, res.index_increment, tokens.length);
   return res.result;
 }
