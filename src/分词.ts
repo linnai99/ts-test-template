@@ -501,6 +501,9 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
     index_increment: 0,
     result: undefined
   }
+  if (tokens.length === 0) {
+    throw `空的令牌数组`
+  }
   while (res.index_increment < tokens.length) {
     const curr_res = 通用解析(tokens.slice(res.index_increment))
     res.index_increment += curr_res.index_increment
