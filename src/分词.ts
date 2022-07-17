@@ -123,6 +123,9 @@ export function 解析字符串(a: string): 解析令牌响应 {
 
   for (const i of a.slice(1)) {
     if (i !== `"`) {
+      if ('\r\n\b\t'.includes(i)) {
+        throw `字符串不应该有空白符`
+      }
       res.result += i;
       res.index_increment += 1
     } else {
@@ -134,10 +137,6 @@ export function 解析字符串(a: string): 解析令牌响应 {
     res.error = "字符串异常停止"
     throw `字符串异常停止 ${res}`
   }
-  if (res.result === "\x0Ba") {
-    throw `不明字符`
-  }
-
   return res;
 }
 
@@ -368,7 +367,7 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
     flag = false;
     // i的结果最后要返回给res的i的增量,这样主函数才能拿到i的增加数
     res.index_increment = i
-    // console.log("res", res);
+
   }
   // console.log("qqw",res,res.index_increment,arr.length);
 
@@ -378,6 +377,7 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
   if (arr[res.index_increment - 1].type !== ']') {
     throw `语法错误: 数组未能正常停止`
   }
+
   return res;
 }
 
@@ -504,10 +504,12 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
   if (tokens.length === 0) {
     throw `空的令牌数组`
   }
-  while (res.index_increment < tokens.length) {
-    const curr_res = 通用解析(tokens.slice(res.index_increment))
-    res.index_increment += curr_res.index_increment
-    res.result = curr_res.result
+  // console.log(res.index_increment, tokens.length);
+  const curr_res = 通用解析(tokens.slice(res.index_increment))
+  res.index_increment += curr_res.index_increment
+  res.result = curr_res.result
+  if(res.index_increment!==tokens.length){
+    throw `JSON应该只有一个主体`
   }
   depth_limiter.clear()
   // console.log(res, res.index_increment, tokens.length);
