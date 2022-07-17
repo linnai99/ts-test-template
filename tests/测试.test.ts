@@ -246,8 +246,9 @@ test('解析', () => {
   // `{"a":`   {"a"  {"a
   //     `{ "foo" : "bar", "a" }`  {"a":"b"}#
   // *
-  const q =`["ad]` 
-  expect(解析(分词(q))).toStrictEqual(JSON.parse(q))
+  const q =`{"asd":2` 
+  expect(() => 解析(分词(q))).toThrowError()
+  // expect(解析(分词(q))).toStrictEqual(JSON.parse(q))
   // expect(解析(分词(`null`))).toStrictEqual(null)
   // expect(解析(分词(`false`))).toStrictEqual(false)
   // expect(解析(分词(`true`))).toStrictEqual(true)

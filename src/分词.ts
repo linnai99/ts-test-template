@@ -368,6 +368,9 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
   if (arr.length === 1 && arr[0].type === '[') {
     throw `语法错误: 预期外的字符 [`
   }
+  if (arr[res.index_increment - 1].type !== ']') {
+    throw `语法错误: 数组未能正常停止`
+  }
   return res;
 }
 function 解析对象(arr: Array<令牌>): 解析对象响应 {
@@ -415,6 +418,9 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
   }
   if (arr.length === 1 && arr[0].type === '{') {
     throw `语法错误: 预期外的字符 {`
+  }
+  if (arr[res.index_increment - 1].type !== '}') {
+    throw `语法错误: 对象未能正常停止`
   }
   return res;
 }
