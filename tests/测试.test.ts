@@ -118,70 +118,70 @@ import { 令牌, 令牌类型, 分词, 解析, 通用解析 } from '../src/分�
 // const path = require('path')
 
 import * as fs from 'fs'
-test('分词1', () => {
-  expect(分词("12e3,456")).toStrictEqual([{
-    type: 令牌类型.数字,
-    content: '12e3',
-    index: 0
-  }
-    , {
-    type: 令牌类型.逗号,
-    content: ',',
-    index: 4
-  }
-    , {
-    type: 令牌类型.数字,
-    content: '456',
-    index: 5
-  }
-  ])
-  expect(分词(`"qwe", 123`)).toStrictEqual([{
-    type: 令牌类型.字符串,
-    content: 'qwe',
-    index: 0
-  }, {
-    type: 令牌类型.逗号,
-    content: ',',
-    index: 5
-  }, {
-    type: 令牌类型.数字,
-    content: '123',
-    index: 7
-  }])
-  // console.log(分词(`"qwe","asd","",2334`));
+// test('分词1', () => {
+//   expect(分词("12e3,456")).toStrictEqual([{
+//     type: 令牌类型.数字,
+//     content: '12e3',
+//     index: 0
+//   }
+//     , {
+//     type: 令牌类型.逗号,
+//     content: ',',
+//     index: 4
+//   }
+//     , {
+//     type: 令牌类型.数字,
+//     content: '456',
+//     index: 5
+//   }
+//   ])
+//   expect(分词(`"qwe", 123`)).toStrictEqual([{
+//     type: 令牌类型.字符串,
+//     content: 'qwe',
+//     index: 0
+//   }, {
+//     type: 令牌类型.逗号,
+//     content: ',',
+//     index: 5
+//   }, {
+//     type: 令牌类型.数字,
+//     content: '123',
+//     index: 7
+//   }])
+//   // console.log(分词(`"qwe","asd","",2334`));
 
-  expect(分词(`"qwe","asd","",2334`)).toStrictEqual([{
-    type: 令牌类型.字符串,
-    content: 'qwe',
-    index: 0
-  }, {
-    type: 令牌类型.逗号,
-    content: ',',
-    index: 5
-  }, {
-    type: 令牌类型.字符串,
-    content: 'asd',
-    index: 6
-  }, {
-    type: 令牌类型.逗号,
-    content: ',',
-    index: 11
-  }, {
-    type: 令牌类型.字符串,
-    content: '',
-    index: 12
-  },
-  {
-    type: 令牌类型.逗号,
-    content: ',',
-    index: 14
-  },
-  {
-    type: 令牌类型.数字,
-    content: '2334',
-    index: 15
-  }])
-})
+//   expect(分词(`"qwe","asd","",2334`)).toStrictEqual([{
+//     type: 令牌类型.字符串,
+//     content: 'qwe',
+//     index: 0
+//   }, {
+//     type: 令牌类型.逗号,
+//     content: ',',
+//     index: 5
+//   }, {
+//     type: 令牌类型.字符串,
+//     content: 'asd',
+//     index: 6
+//   }, {
+//     type: 令牌类型.逗号,
+//     content: ',',
+//     index: 11
+//   }, {
+//     type: 令牌类型.字符串,
+//     content: '',
+//     index: 12
+//   },
+//   {
+//     type: 令牌类型.逗号,
+//     content: ',',
+//     index: 14
+//   },
+//   {
+//     type: 令牌类型.数字,
+//     content: '2334',
+//     index: 15
+//   }])
+// })
 // test('分词2', () => {
 //   expect(分词(`[1,2]`)).toStrictEqual([
 //     {
@@ -230,21 +230,41 @@ test('分词1', () => {
 //   ])
 // })
 test('解析', () => {
-  const q = `[{"asd":123}]`
-  // expect(解析(分词(q))).toStrictEqual(JSON.parse(q)),
-
-  expect(解析(分词(`1234`))).toStrictEqual(1234)
-  // const json = `
-  // [
-  //   "qwe",
-  //   [1e2, 23, [4], []],
-  //   "asd",456,
-  //   [], [[]], [[[[[[
-  //     {"asd":123,"zxc":{"zxcv":123, "qwe": []}}
-  //   ]]]]]],
-  //   12e3,"asf"
-  // ]
-  // `
+  // const q = `["x"` `[1,`   [1,] 
+  // `[1,
+  //   1
+  //   ,1`
+  // [""
+  // `[{}`   {"asd":"asd"
+  // `[-1.0.]` `[-1.0.1]`
+  // `[1.8011670033376514H-308]`
+  // `[.123]`
+  // `[012]`
+  // `{"x"::"b"}`
+  // `{"�":"0",}`
+  // `{"a" b}` 分词为{ a了
+  // `{"a":`   {"a"  {"a
+  //     `{ "foo" : "bar", "a" }`  {"a":"b"}#
+  // *
+  const q =`["ad]` 
+  expect(解析(分词(q))).toStrictEqual(JSON.parse(q))
+  // expect(解析(分词(`null`))).toStrictEqual(null)
+  // expect(解析(分词(`false`))).toStrictEqual(false)
+  // expect(解析(分词(`true`))).toStrictEqual(true)
+  const json =
+  `
+  [
+    "qwe",
+    [1e2, 23, [4], []],
+    "asd",456,
+    [], [[]], [[[[[[
+      {"asd":123,"zxc":{"zxcv":123, "qwe": []}}
+    ]]]]]],
+    12e3,"asf"
+  ]
+  `
+  // const tokens = 分词(json)
+  // expect(解析(tokens)).toStrictEqual(JSON.parse(json))
   // expect(解析(分词(`["qwe"]`))).toStrictEqual(["qwe"])  
 
   // expect(解析(分词(`{"qwe":{"qwer":"wqe"}, "asd":"asdf"}`))).toStrictEqual({
@@ -259,25 +279,29 @@ test('解析数据', () => {
   fs.readdirSync(folderPath).forEach(item => {
     // console.log(item);
     const file_content = fs.readFileSync(`${folderPath}/${item}`, 'utf8')
-    if (item[0] === "n") {
-      const tokens = 分词(file_content)
-      expect(() => 解析(tokens), file_content).toThrowError()
-    } else if (item[0] === "y") {
-      expect(解析(分词(file_content)), file_content).toStrictEqual(JSON.parse(file_content));
-    }
+    // if (item[0] === "y") {
+    //   expect(解析(分词(file_content)), file_content).toStrictEqual(JSON.parse(file_content));
+    // }
+
+    // if (item[0] === "n") {
+    //   const tokens = 分词(file_content)
+    //   expect(() => 解析(tokens), file_content).toThrowError()
+    // } else if (item[0] === "y") {
+    //   expect(解析(分词(file_content)), file_content).toStrictEqual(JSON.parse(file_content));
+    // }
 
   })
 })
 test('错误分词', () => {
-  expect(() => 分词(`"""`)).toThrowError("字符串异常停止")
+  // expect(() => 分词(`"""`)).toThrowError("字符串异常停止")
   // expect(() => 解析(分词(`{{}`))).toThrowError("字符串异常停止")
   // expect(解析(tokens)).toStrictEqual(JSON.parse(json)) // 1. 这里应该仿照下面错误分词哪里, 用toThrowError, 而不是用toStrictEqual
-  const json = `[][`
+  const json = `[`
   // {{}
   // {}}
-  const tokens = 分词(json)
-
-  expect(() => 解析(tokens)).toThrowError(`语法错误: 预期外的字符 ${tokens[tokens.length - 1].content}`)
+  // const tokens = 分词(json)
+  // expect(() => 解析(tokens)).toThrowError()
+  // expect(() => 解析(tokens)).toThrowError(`语法错误: 预期外的字符 ${tokens[tokens.length - 1].content}`)
 
 })
 

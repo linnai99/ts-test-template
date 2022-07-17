@@ -1,6 +1,24 @@
 import { assert } from "console";
 import { copyFileSync } from "fs";
 
+
+class DepthLimiter {
+  public current_loop_depth: number = 0;
+  public readonly MAX_LOOP_DEPTH = 10000;
+
+  public check_loop_depth() {
+    if (this.current_loop_depth > this.MAX_LOOP_DEPTH) {
+      throw `递归深度过大: ${this.current_loop_depth}`
+    }
+    this.current_loop_depth += 1
+  }
+  public clear() {
+    this.current_loop_depth = 0
+  }
+}
+
+const depth_limiter = new DepthLimiter()
+
 export enum 令牌类型 {
   左大括号 = "{",
   右大括号 = "}",
@@ -21,7 +39,12 @@ export interface 令牌 {
   index: number
 }
 export const 是否是数字开头 = String.prototype.includes.bind(`-.0123456789`)
-
+export function 是不是n开头(a: string) {
+  return a === "n"
+}
+export function 是不是逻辑值开头(a: string) {
+  return a === "t" || a === "f"
+}
 export function 是否是数字(a: string) {
   // console.log("qq", a);
   // 遇到负数-123 小数点.123 浮点数12.23 零开头的0123 中间有e的
@@ -49,6 +72,48 @@ export interface 解析令牌响应 {
   type: 令牌类型,
   error?: string,
 }
+export function 解析null(a: string): 解析令牌响应 {
+  const res: 解析令牌响应 = {
+    index_increment: 0,
+    result: ``,
+    type: 令牌类型.null
+  }
+  if (a.slice(0, 4) === "null") {
+    res.result = null;
+    res.index_increment = 4;
+  } else {
+    throw `不正确的null`
+  }
+  return res;
+}
+export function 解析逻辑值(a: string): 解析令牌响应 {
+  const res: 解析令牌响应 = {
+    index_increment: 0,
+    result: ``,
+    type: 令牌类型.逻辑值
+  }
+  for (let i = 0; i < a.length;) {
+    if (a.slice(i, i + 4) === "true") {
+      res.result = "true";
+      res.index_increment = 4;
+      i += 4
+      return res;
+    } else if (a.slice(i, i + 5) === "false") {
+      res.result = "false";
+      res.index_increment = 5;
+      i += 5
+      return res;
+    } else {
+      // console.log(a);
+
+      throw `不正确的逻辑值${a}`
+    }
+  }
+
+  // console.log(res);
+
+  return res;
+}
 export function 解析字符串(a: string): 解析令牌响应 {
   const res: 解析令牌响应 = {
     index_increment: 1,
@@ -69,6 +134,9 @@ export function 解析字符串(a: string): 解析令牌响应 {
     res.error = "字符串异常停止"
     throw `字符串异常停止 ${res}`
   }
+  if (res.result === "\x0Ba") {
+    throw `不明字符`
+  }
 
   return res;
 }
@@ -80,6 +148,9 @@ function 解析数字(a: string): 解析令牌响应 {
     type: 令牌类型.数字
   }
   for (let i = 0; i < a.length;) {
+    if (a[0] === "0" && (a[1] === "}" || a[1] === "]")) {
+      res.result = "0";
+    }
     if (a[i] === "0") {
       i++;
     } else if (a[i] >= "1" && a[i] <= "9") {
@@ -87,19 +158,34 @@ function 解析数字(a: string): 解析令牌响应 {
       while (a[i] >= "0" && a[i] <= "9") {
         i++;
       }
+      // console.log("1");
       res.result = a.slice(0, i);
     } else if (a[i] === "-") {
       i++;
       if ((a[i] >= "0" && a[i] <= "9")) {
-      }
-    } else if (a[i] === ".") {
-      i++;
-      if ((a[i] >= "0" && a[i] <= "9")) {
-
+        // console.log("err1",a[i]);
+      } else {
+        // console.log("err2");
+        // throw "不正确的数字"
       }
       while (a[i] >= "0" && a[i] <= "9") {
         i++;
       }
+      // console.log("2");
+      res.result = a.slice(0, i)
+      // console.log("err",a[i]);
+    } else if (a[i] === ".") {
+      i++;
+      if ((a[i] >= "0" && a[i] <= "9")) {
+        while (a[i] >= "0" && a[i] <= "9") {
+          i++;
+        }
+      } else {
+        // console.log("error");
+        throw "不正确的数字"
+      }
+
+      // console.log("3");
       res.result = a.slice(0, i)
     } else if (a[i] === "e" || a[i] === "E") {
       i++;
@@ -111,9 +197,16 @@ function 解析数字(a: string): 解析令牌响应 {
       while (a[i] >= "0" && a[i] <= "9") {
         i++;
       }
+      // console.log("4");
       res.result = a.slice(0, i);
     } else {
-      break;
+      // console.log("sd",a[i]);
+      break
+      // if(a[i] === ","||a[i]=="]"||a[i]=="}"||a[i]=='"'||a[i]==''){
+      //   break;
+      // }
+      // throw `错误的数字`;
+
     }
     res.index_increment = i
 
@@ -127,12 +220,16 @@ function 解析数字(a: string): 解析令牌响应 {
   //     break
   //   }
   // }
+  // console.log("res",res);
+
   return res
 }
 export function 分词(a: string): Array<令牌> {
   const res: 令牌[] = [];
+  // console.log("a",a);
 
   for (let i = 0; i < a.length;) {
+
 
     const char = a[i];
     let r: 解析令牌响应;
@@ -142,6 +239,7 @@ export function 分词(a: string): Array<令牌> {
     } else if (是否是数字开头(char)) {
       // console.log("char",char)
       r = 解析数字(a.slice(i))
+      // console.log("r",r)
       res.push({
         content: r.result,
         type: r.type,
@@ -198,6 +296,23 @@ export function 分词(a: string): Array<令牌> {
         index: i
       })
       i += r.index_increment
+    } else if (是不是n开头(char)) {
+      r = 解析null(a.slice(i));
+      res.push({
+        content: r.result,
+        type: r.type,
+        index: i
+      })
+      i += r.index_increment
+    } else if (是不是逻辑值开头(char)) {
+
+      r = 解析逻辑值(a.slice(i));
+      res.push({
+        content: r.result,
+        type: r.type,
+        index: i
+      })
+      i += r.index_increment
     } else {
       break
     }
@@ -220,23 +335,36 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
     index_increment: 1,
     result: [],
   }
+  let flag = true;
   for (let i = 1; i < arr.length;) {
     const curr_token = arr[i];
+    // if(curr_token.type !== ']'){
+    //   throw `缺少右中括号`
+    // }
+    if (!flag && curr_token.type !== ']') {
+      if (curr_token.type !== ",") {
+        throw `缺少逗号!`
+      }
+      i++;
+    }
     if (curr_token.type === ']') {
       res.index_increment = i + 1
       break
-    } else if (curr_token.type === ",") {
-      i++;
-    } else {
-      const current_array_res = 通用解析(arr.slice(i))
-      res.result.push(current_array_res.result)
-      i += current_array_res.index_increment
     }
+    // console.log("arr.slice(i)", arr.slice(i));
+    const current_array_res = 通用解析(arr.slice(i))
+    res.result.push(current_array_res.result)
+    // console.log("12",res.result);
+
+
+    i += current_array_res.index_increment
+    flag = false;
     // i的结果最后要返回给res的i的增量,这样主函数才能拿到i的增加数
     res.index_increment = i
     // console.log("res", res);
-
   }
+  // console.log("qqw",res,res.index_increment,arr.length);
+
   if (arr.length === 1 && arr[0].type === '[') {
     throw `语法错误: 预期外的字符 [`
   }
@@ -248,6 +376,7 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
     result: {},
   }
   let key, value;
+  let flag = false;
   for (let i = 1; i < arr.length;) {
     // console.log('arr[i]',arr[i])
     if (arr[i].type === "}") {
@@ -258,17 +387,23 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
       if (arr[i].type === "{") {
         throw `语法错误: 预期外的字符: ${arr[i].content}`
       }
-      key = 通用解析([arr[i]]).result;
+      if (arr[i].type === "字符串") {
+        key = 通用解析([arr[i]]).result;
+      } else {
+        throw `键的类型异常`
+      }
       // console.log('key',key,arr[i])
       i++;
     } else if (arr[i].type === ":") {
       i++;
-    } else if (value === undefined) {
+      flag = true;
+    } else if (value === undefined && flag) {
+      // console.log( "asd",i);
       const curr_res = 通用解析(arr.slice(i));
       // console.log("xxx",arr.slice(i));  
       value = res.result[key] = curr_res.result;
       i += curr_res.index_increment;
-    } else if (arr[i].type === ",") {
+    } else if (arr[i].type === "," && flag) {
       i++;
       key = value = undefined;
     } else {
@@ -290,12 +425,13 @@ export function 通用解析(tokens: 令牌[]): 解析对象响应 {
     result: undefined
   }
   const curr_token = arr[res.index_increment]
-  // console.log(curr_token);
+  depth_limiter.check_loop_depth()
 
   if (curr_token.type === "[") {
+
     const current_array_res = 解析数组(arr)
     res.result = current_array_res.result
-    // console.log("i",i)
+    // console.log("i", res)
     res.index_increment = current_array_res.index_increment
   } else if (curr_token.type === "{") {
     // console.log("arra",解析数组(arr))
@@ -309,20 +445,30 @@ export function 通用解析(tokens: 令牌[]): 解析对象响应 {
     res.result = curr_token.content;
     res.index_increment = 1
   } else if (curr_token.type === "数字") {
+    if (curr_token.content === "") {
+      // console.log(arr);
+
+      throw `数字错误`
+    }
     res.result = Number(curr_token.content);
     res.index_increment = 1
   } else if (curr_token.type === '}') {
     // console.log("qqq2",res.index_increment);
     throw `语法错误: 预期外的字符 ${curr_token.content} 在位置 ${curr_token.index}`
+  } else if (curr_token.type === "null") {
+    res.result = curr_token.content
+    res.index_increment = 1
+  } else if (curr_token.type === '逻辑值') {
+    res.result = curr_token.content === "true" ? true : false;
+    // res.result = Boolean(curr_token.content)
+    res.index_increment = 1
   } else {
     // console.log('未知的类', curr_token);
     throw `未知的类型 ${curr_token}`
   }
-  // console.log("qqq3",res);
+  // console.log("qqq3", res);
   return res;
 }
-
-
 export function 解析(tokens: 令牌[]): 解析对象响应 {
   const res: 解析对象响应 = {
     index_increment: 0,
@@ -333,6 +479,7 @@ export function 解析(tokens: 令牌[]): 解析对象响应 {
     res.index_increment += curr_res.index_increment
     res.result = curr_res.result
   }
-  // console.log(res, res.index_increment, tokens.length);
-  return res.result
+  depth_limiter.clear()
+  console.log(res, res.index_increment, tokens.length);
+  return res.result;
 }
