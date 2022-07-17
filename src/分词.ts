@@ -141,7 +141,7 @@ export function 解析字符串(a: string): 解析令牌响应 {
   return res;
 }
 
-function 解析正整数(s: string): string {
+function 解析正整数(s: string, dont_throw_when_zero = false): string {
   let res = ''
 
   for (const c of s) {
@@ -150,6 +150,9 @@ function 解析正整数(s: string): string {
     } else {
       break
     }
+  }
+  if (dont_throw_when_zero) {
+    return res
   }
   if (res.length && res[0] === "0") {
     if (res.length === 1) {
@@ -187,7 +190,7 @@ export function 解析普通数字(a: string): string {
   if (a[i] !== `.`) {
     return prefix
   }
-  const suffix = 解析正整数(a.slice(i + 1));
+  const suffix = 解析正整数(a.slice(i + 1), true);
   if (suffix === "") {
     return prefix
   }
@@ -205,7 +208,7 @@ export function 解析科学计数法(a: string): string {
   if (a[i].toLowerCase() !== `e`) {
     return prefix
   }
-  const suffix = 解析正整数(a.slice(i + 1));
+  const suffix = 解析整数(a.slice(i + 1));
   if (suffix === "") {
     throw `e后面应有数字`
   }
@@ -320,7 +323,7 @@ export function 分词(a: string): Array<令牌> {
       })
       i += r.index_increment
     } else {
-      break
+      throw `语法错误: 未知的符号 ${char}`
     }
 
     if (r?.error) {
@@ -401,7 +404,7 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
       }
       // console.log('key',key,arr[i])
       i++;
-    } else if (arr[i].type === ":") {
+    } else if (arr[i].type === ":" && !flag) {
       i++;
       flag = true;
     } else if (value === undefined && flag) {
@@ -413,6 +416,7 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
     } else if (arr[i].type === "," && flag) {
       i++;
       key = value = undefined;
+      flag = false;
     } else {
       // console.log('什么也不是', arr[i]);
       throw `什么也不是 ${arr[i]}`
@@ -425,6 +429,9 @@ function 解析对象(arr: Array<令牌>): 解析对象响应 {
   }
   if (arr[res.index_increment - 1].type !== '}') {
     throw `语法错误: 对象未能正常停止`
+  }
+  if (arr[res.index_increment - 2].type === ",") {
+    throw `语法错误: 对象不应当有裸逗号`
   }
   return res;
 }
