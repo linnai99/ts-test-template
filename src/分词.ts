@@ -206,7 +206,7 @@ export function 解析科学计数法(a: string): string {
     return prefix
   }
   const suffix = 解析正整数(a.slice(i + 1));
-  if ((i + 1) === a.length) {
+  if (suffix === "") {
     throw `e后面应有数字`
   }
 
