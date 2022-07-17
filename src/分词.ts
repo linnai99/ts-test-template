@@ -380,49 +380,59 @@ function 解析数组(arr: Array<令牌>): 解析对象响应 {
   }
   return res;
 }
-function 解析对象(arr: Array<令牌>): 解析对象响应 {
+
+export function 解析pair(arr: 令牌[]): 解析对象响应 {
+  // "a": 2, "asd": ["zxc"]
+  // 对儿
+  const res: 解析对象响应 = {
+    index_increment: 2,
+    result: {
+      key: undefined,
+      value: undefined
+    }
+  }
+  // console.log(arr, arr.length);
+
+  if (arr.length < 3) {
+    throw `key of pair 长度至少为三`
+  }
+
+  if (arr[0].type !== 令牌类型.字符串) {
+    throw `key of pair must be string`
+  }
+  res.result.key = arr[0].content
+  if (arr[1].type !== 令牌类型.冒号) {
+    throw `键值对连接必须为冒号`
+  }
+  const value_res = 通用解析(arr.slice(2))
+  res.index_increment += value_res.index_increment
+  res.result.value = value_res.result
+  return res
+}
+export function 解析对象(arr: Array<令牌>): 解析对象响应 {
   const res: 解析对象响应 = {
     index_increment: 1,
     result: {},
   }
-  let key, value;
-  let flag = false;
   for (let i = 1; i < arr.length;) {
-    // console.log('arr[i]',arr[i])
-    if (arr[i].type === "}") {
-      res.index_increment = i + 1;
-      break;
-    }
-    if (key === undefined) {
-      if (arr[i].type === "{") {
-        throw `语法错误: 预期外的字符: ${arr[i].content}`
-      }
-      if (arr[i].type === "字符串") {
-        key = 通用解析([arr[i]]).result;
-      } else {
-        throw `键的类型异常`
-      }
-      // console.log('key',key,arr[i])
-      i++;
-    } else if (arr[i].type === ":" && !flag) {
-      i++;
-      flag = true;
-    } else if (value === undefined && flag) {
-      // console.log( "asd",i);
-      const curr_res = 通用解析(arr.slice(i));
-      // console.log("xxx",arr.slice(i));  
-      value = res.result[key] = curr_res.result;
-      i += curr_res.index_increment;
-    } else if (arr[i].type === "," && flag) {
-      i++;
-      key = value = undefined;
-      flag = false;
+    const token = arr[i]
+
+    // console.log('arr[i]', token)
+
+    const pair = 解析pair(arr.slice(res.index_increment));
+    res.result[pair.result.key] = pair.result.value;
+    res.index_increment += pair.index_increment;
+    i = res.index_increment
+    if (arr[i].type === `,`) {
+      res.index_increment += 1;
+      i += 1
+    } else if (arr[i].type === `}`) {
+      res.index_increment += 1;
+      break
     } else {
-      // console.log('什么也不是', arr[i]);
-      throw `什么也不是 ${arr[i]}`
-      i++;
+      throw `语法错误: 未知的符号`
     }
-    res.index_increment = i;
+
   }
   if (arr.length === 1 && arr[0].type === '{') {
     throw `语法错误: 预期外的字符 {`
